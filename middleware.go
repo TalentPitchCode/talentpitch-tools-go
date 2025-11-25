@@ -45,7 +45,7 @@ func (c CustomClaims) GetID() uint {
 
 // SetupLocationWithTrustedProxies configures Gin router with location middleware
 // and trusted proxies settings. This function should be called before setting up routes.
-func SetupLocationWithTrustedProxies(r *gin.Engine, jwtSecret string) (*gin.Engine, error) {
+func SetupLocationWithTrustedProxies(r *gin.Engine, jwtSecret string, trustedProxies []string) (*gin.Engine, error) {
 	// Trust all proxies (Required for Cloudflare -> AWS ALB -> EKS)
 	// Security is handled by AWS Security Groups and VPC isolation
 	// Ingress: Tu ALB (k8s-developm-nginx...) tiene los Security Groups sg-087e406bb9c504ccf y sg-00191405ecc229d51.
@@ -54,7 +54,7 @@ func SetupLocationWithTrustedProxies(r *gin.Engine, jwtSecret string) (*gin.Engi
 	// ✅ Existe una regla que permite tráfico desde el ALB hacia tus nodos en el rango de puertos 3030-5678 (que incluye tu puerto 5001).
 	// ✅ NO existen reglas de entrada abiertas (0.0.0.0/0) en tus nodos.
 	// Conclusión: Nadie puede conectarse directamente a tus Pods desde internet saltándose el Load Balancer. Por lo tanto, confiar en todas las IPs (0.0.0.0/0) a nivel de aplicación es seguro porque la red ya filtra quién puede hablarte (solo el ALB).
-	r.SetTrustedProxies([]string{"0.0.0.0/0"})
+	r.SetTrustedProxies(trustedProxies)
 
 	// Use location middleware (handles scheme/host from headers)
 	// Note: c.ClientIP() should work automatically after SetTrustedProxies
@@ -206,7 +206,7 @@ func getClientIP(c *gin.Context) string {
 }
 
 // SetupTalentpitchMiddlewares is a convenience function that sets up all middlewares
-func SetupTalentpitchMiddlewares(r *gin.Engine, jwtSecret string) (*gin.Engine, error) {
-	return SetupLocationWithTrustedProxies(r, jwtSecret)
+func SetupTalentpitchMiddlewares(r *gin.Engine, jwtSecret string, trustedProxies []string) (*gin.Engine, error) {
+	return SetupLocationWithTrustedProxies(r, jwtSecret, trustedProxies)
 }
 
