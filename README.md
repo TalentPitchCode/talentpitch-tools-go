@@ -27,6 +27,16 @@ func main() {
         log.Fatal(err)
     }
     
+    // Ahora puedes usar c.GetString("client_ip") y c.MustGet("user")
+    router.GET("/me", func(c *gin.Context) {
+        // Note: This example assumes a JWT middleware has run and populated "user" context key,
+        // even though this section is titled "sin JWT".
+        // For a full JWT setup, refer to the "Configurar Middlewares con JWT" section.
+        user := c.MustGet("user").(*helpers.CustomClaims)
+        ip := c.GetString("client_ip")
+        c.JSON(200, gin.H{"user": user, "ip": ip})
+    })
+    
     // Ahora puedes usar c.GetString("client_ip") en tus handlers
     router.GET("/ip", func(c *gin.Context) {
         ip := c.GetString("client_ip")

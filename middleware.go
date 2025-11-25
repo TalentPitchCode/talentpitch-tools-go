@@ -4,44 +4,13 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strconv"
 	"strings"
-	"time"
 
+	"github.com/TalentPitchCode/talentpitch-tools-go/helpers"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-contrib/location"
 	"github.com/gin-gonic/gin"
 )
-
-// CustomClaims represents the JWT claims structure
-type CustomClaims struct {
-	Issuer         string `json:"iss"`
-	ID             string `json:"sub"` //this is an string to get an equivalent token with those PHP generated
-	IssuedAt       int64  `json:"iat"`
-	ExpirationTime int64  `json:"exp"`
-	Name           string `json:"name"`
-	Email          string `json:"email"`
-	Avatar         string `json:"avatar"`
-	About          string `json:"about"`
-	AboutVideo     string `json:"about_video"`
-	ProfileId      uint   `json:"profile_id"`
-}
-
-func (c CustomClaims) Valid() error {
-	now := time.Now().Unix()
-	if c.ExpirationTime < now {
-		return jwt.NewValidationError("token is expired", jwt.ValidationErrorExpired)
-	}
-	if c.IssuedAt > now {
-		return jwt.NewValidationError("token used before issued", jwt.ValidationErrorIssuedAt)
-	}
-	return nil
-}
-
-func (c CustomClaims) GetID() uint {
-	id, _ := strconv.Atoi(c.ID)
-	return uint(id)
-}
 
 // SetupLocationWithTrustedProxies configures Gin router with location middleware
 // and trusted proxies settings. This function should be called before setting up routes.
@@ -95,7 +64,7 @@ func optionalJWTMiddleware(jwtSecret string) gin.HandlerFunc {
 
 		tokenString := tokenSplit[1]
 		//token validation
-		token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(tokenString, &helpers.CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
@@ -109,7 +78,7 @@ func optionalJWTMiddleware(jwtSecret string) gin.HandlerFunc {
 		}
 
 		// If token is valid, set user in context
-		claims := token.Claims.(*CustomClaims)
+		claims := token.Claims.(*helpers.CustomClaims)
 		c.Set("user", claims)
 
 		c.Next()
@@ -136,7 +105,7 @@ func JWTMiddleware(jwtSecret string) gin.HandlerFunc {
 
 		tokenString := tokenSplit[1]
 		//token validation
-		token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(tokenString, &helpers.CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
@@ -148,7 +117,7 @@ func JWTMiddleware(jwtSecret string) gin.HandlerFunc {
 			return
 		}
 		// if token is valid, set user in context
-		claims := token.Claims.(*CustomClaims)
+		claims := token.Claims.(*helpers.CustomClaims)
 
 		c.Set("user", claims)
 
