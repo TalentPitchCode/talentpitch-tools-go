@@ -16,6 +16,7 @@ type Client struct {
 	client        *openai.Client
 	model         string
 	promptBuilder PromptTemplate
+	blockedTerms  []string
 }
 
 // Config holds configuration for the Groq client
@@ -29,6 +30,10 @@ type Config struct {
 	// PromptTemplate is a function that generates the prompt for content moderation
 	// If not provided, a default prompt will be used
 	PromptTemplate PromptTemplate
+	// BlockedTerms is a list of offensive terms to check before using AI
+	// If not provided, a default list will be used
+	// If empty slice is provided, blocked terms checking will be disabled
+	BlockedTerms []string
 }
 
 // NewClient creates a new Groq client with the given configuration
@@ -69,12 +74,21 @@ func NewClient(cfg Config) *Client {
 		promptBuilder = defaultPromptTemplate
 	}
 
+	// Set blocked terms (use default if not provided)
+	blockedTerms := cfg.BlockedTerms
+	if blockedTerms == nil {
+		// Use default blocked terms if not explicitly set
+		blockedTerms = defaultBlockedTerms()
+	}
+	// If empty slice is provided, blocked terms checking is disabled
+
 	log.Printf("Groq client initialized successfully with model: %s", model)
 
 	return &Client{
 		client:        client,
 		model:         model,
 		promptBuilder: promptBuilder,
+		blockedTerms:  blockedTerms,
 	}
 }
 

@@ -11,14 +11,24 @@ import (
 )
 
 // CheckMessageContent uses Groq to analyze message content and determine if it's malicious
+// First checks against a static list of blocked terms, then uses AI if no blocked terms are found
 // Returns:
 //   - isMalicious: true if the message should be rejected
 //   - errorCode: error code for the rejection reason
 //   - reason: brief reason for rejection
 //   - error: any error that occurred during the check
 func (c *Client) CheckMessageContent(ctx context.Context, messageText string) (isMalicious bool, errorCode string, reason string, err error) {
+	// First, check against static blocked terms list
+	if c != nil && len(c.blockedTerms) > 0 {
+		hasBlockedTerm, foundTerm := containsBlockedTerm(messageText, c.blockedTerms)
+		if hasBlockedTerm {
+			log.Printf("Message contains blocked term: %s", foundTerm)
+			return true, "CONTENT_INAPPROPRIATE", "Message contains inappropriate language", nil
+		}
+	}
+
+	// If no blocked terms found and client is not initialized, allow the message (fail open)
 	if c == nil || c.client == nil {
-		// If Groq client is not initialized, allow the message (fail open)
 		log.Printf("Groq client not initialized, allowing message")
 		return false, "", "", nil
 	}

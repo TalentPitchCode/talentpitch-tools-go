@@ -132,6 +132,7 @@ import (
 
 func main() {
     // Inicializar cliente Groq (lee variables de entorno automáticamente)
+    // Por defecto, incluye una lista de términos ofensivos que se verifican antes de usar IA
     groqClient := groq.NewClient(groq.Config{})
     
     if groqClient == nil {
@@ -139,6 +140,7 @@ func main() {
     }
     
     // Verificar contenido de mensaje
+    // Primero verifica términos bloqueados estáticos, luego usa IA si no encuentra nada
     ctx := context.Background()
     messageText := "Hello, this is a test message"
     
@@ -256,6 +258,40 @@ groqClient := groq.NewClient(groq.Config{
     BaseURL: "https://api.groq.com/openai/v1", // Opcional, tiene valor por defecto
 })
 ```
+
+#### Filtrado de Términos Ofensivos Estáticos
+
+El paquete incluye un filtro de términos ofensivos estáticos que se ejecuta **antes** de usar la IA. Esto permite rechazar mensajes inmediatamente sin necesidad de consultar la API de Groq, ahorrando tiempo y costos.
+
+**Comportamiento por defecto:**
+- El cliente carga una lista básica de términos ofensivos desde `groq/blocked_terms.txt` (incluido en el paquete)
+- Si un mensaje contiene algún término bloqueado, se rechaza inmediatamente con `errorCode: "CONTENT_INAPPROPRIATE"`
+- Si no se encuentra ningún término bloqueado, se procede con la validación de IA
+- La lista por defecto se puede personalizar editando el archivo `blocked_terms.txt` en el repositorio
+
+**Personalizar términos bloqueados:**
+
+```go
+// Usar tu propia lista de términos
+groqClient := groq.NewClient(groq.Config{
+    BlockedTerms: []string{
+        "palabra1",
+        "palabra2",
+        "término ofensivo",
+        // ... más términos
+    },
+})
+
+// Deshabilitar filtro de términos bloqueados (solo usar IA)
+groqClient := groq.NewClient(groq.Config{
+    BlockedTerms: []string{}, // Lista vacía deshabilita el filtro
+})
+```
+
+**Nota:** 
+- Si no especificas `BlockedTerms` en la configuración, se usará la lista por defecto cargada desde `blocked_terms.txt`
+- Si proporcionas una lista vacía `[]string{}`, el filtro de términos bloqueados se deshabilitará completamente
+- El archivo `blocked_terms.txt` soporta comentarios (líneas que empiezan con `#`) y líneas vacías
 
 #### Personalizar el Prompt
 
