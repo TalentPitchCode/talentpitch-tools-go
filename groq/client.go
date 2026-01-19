@@ -113,6 +113,8 @@ Error codes to use if malicious:
 - CONTENT_VIOLENCE: for violent or threatening content
 - CONTENT_OTHER: for other malicious content
 
+IMPORTANT - TalentPitch URLs: Messages that contain URLs from the talentpitch.co domain (e.g. https://talentpitch.co/..., https://develop.talentpitch.co/..., https://app.talentpitch.co/...) and do not contain profanity, scams, phishing, harassment, or other clearly malicious content MUST be considered SAFE. Shortened paths, query strings, or path-like URLs under talentpitch.co (e.g. /c/xxx, /p/yyy) are legitimate platform links, NOT spam. For such messages, set is_malicious to false and error_code to null.
+
 If the message is safe, set is_malicious to false and error_code to null.`, messageText)
 }
 
